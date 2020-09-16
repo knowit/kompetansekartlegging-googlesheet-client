@@ -8,39 +8,37 @@
  * @copyright 2020 Knowit Objectnet AS
  */
 const spreadsheets = {
-  grupper: SpreadsheetApp.openByUrl(
-    'https://docs.google.com/spreadsheets/d/1lHKZeE6UvGBYKHUpMEcHb4zMUkwyystWkCa1ED-F8yQ/edit'
-  ),
+  grupper: SpreadsheetApp.openByUrl(secrets.spreadsheets.grupper.url),
 };
 
 const config = {
-  version: '1.0.19',
+  version: "1.0.19",
   sheets: {
-    svar: SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Skjemasvar 1'),
-    kategorier: spreadsheets.grupper.getSheetByName('Kategorier'),
-    ansatte: spreadsheets.grupper.getSheetByName('Ansatt med leder'),
-    ledere: spreadsheets.grupper.getSheetByName('Ledere'),
-    radar: spreadsheets.grupper.getSheetByName('Radar'),
+    svar: SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Skjemasvar 1"),
+    kategorier: spreadsheets.grupper.getSheetByName("Kategorier"),
+    ansatte: spreadsheets.grupper.getSheetByName("Ansatt med leder"),
+    ledere: spreadsheets.grupper.getSheetByName("Ledere"),
+    radar: spreadsheets.grupper.getSheetByName("Radar"),
   },
   colors: {
     competencies: {
-      header: '#c0e4e6', // "#46bdc6"
+      header: "#c0e4e6", // "#46bdc6"
       gradient: {
-        min: '#c5f3f7',
-        max: '#46bdc6',
+        min: "#c5f3f7",
+        max: "#46bdc6",
       },
     },
     motivation: {
-      header: '#f8ebc4', // "#fbbc04",
+      header: "#f8ebc4", // "#fbbc04",
       gradient: {
-        min: '#f8ebc4',
-        max: '#fbbc04',
+        min: "#f8ebc4",
+        max: "#fbbc04",
       },
     },
     all: {
       gradient: {
-        min: '#c0e4e6',
-        max: '#04a4b0',
+        min: "#c0e4e6",
+        max: "#04a4b0",
       },
     },
   },
@@ -51,7 +49,7 @@ const config = {
  * when that happens
  */
 function handleNewData(e) {
-  console.log('Got new data trigger');
+  console.log("Got new data trigger");
 
   updateDataMaster();
   const eid = findGoogleidInRow(e.range.rowStart);
@@ -62,7 +60,7 @@ function handleNewData(e) {
 
   // Only regenerate the group with changes
   updateGroupManagerDocumentForGoogleId(mid);
-  console.log('Done.');
+  console.log("Done.");
 }
 
 /**
@@ -73,7 +71,7 @@ function handleNewData(e) {
  */
 function findGoogleidInRow(row) {
   const googleid = config.sheets.svar.getRange(row, 2).getValue();
-  console.log('find googleid in row:', googleid);
+  console.log("find googleid in row:", googleid);
   return googleid;
 }
 
@@ -92,7 +90,7 @@ function getManagerForEmployee(id) {
     .slice(3)
     .find((r) => r[2] === id)[6];
 
-  console.log('get manager for employee:', id, ' -> ', boss);
+  console.log("get manager for employee:", id, " -> ", boss);
   return boss;
 }
 
@@ -102,7 +100,7 @@ function getManagerForEmployee(id) {
  * documents for some reason.
  */
 function updateGroupManagerDocuments() {
-  console.log('Generating Group Manager Documents, version: ', config.version);
+  console.log("Generating Group Manager Documents, version: ", config.version);
   getGroupManagers().forEach(updateGroupDocument);
 }
 
@@ -115,7 +113,7 @@ function updateGroupManagerDocuments() {
  * @returns string - the name of the generated file
  * @customfunction
  */
-function updateGroupManagerDocumentForGoogleId(id = 'mayn.kjar@knowit.no') {
+function updateGroupManagerDocumentForGoogleId(id = "mayn.kjar@knowit.no") {
   const managers = getGroupManagers();
   return updateGroupDocument(managers.find((m) => m.googleid === id));
 }
@@ -132,23 +130,23 @@ function updateDataMaster() {
   const cols = svar.getLastColumn() - 1;
 
   const headers = svar.getRange(1, 2, 1, cols).getValues()[0];
-  headers[0] = 'UUID';
+  headers[0] = "UUID";
 
   const data = svar.getRange(2, 2, rows, cols).getValues();
-  const outSvar = ss.getSheetByName('Alle Svar') || ss.insertSheet('Alle Svar');
+  const outSvar = ss.getSheetByName("Alle Svar") || ss.insertSheet("Alle Svar");
 
   outSvar.clear();
   outSvar
     .getRange(1, 1, 1, cols)
     .setValues([headers])
-    .setFontWeight('bold')
-    .setBackground('#efefef')
+    .setFontWeight("bold")
+    .setBackground("#efefef")
     .setFontSize(10)
-    .setVerticalAlignment('bottom');
+    .setVerticalAlignment("bottom");
   outSvar
     .getRange(1, 2, 1, cols - 1)
     .setTextRotation(45)
-    .setHorizontalAlignment('center');
+    .setHorizontalAlignment("center");
 
   const outData = data
     .map((row) => {
@@ -167,10 +165,13 @@ function updateDataMaster() {
     .getRange(2, 1, rows, cols)
     .setValues(outData)
     .setFontSize(8)
-    .setVerticalAlignment('middle')
-    .setHorizontalAlignment('center')
-    .setFontFamily('Roboto Mono');
-  outSvar.getRange(2, 1, rows, 1).setBackground('#efefef').setHorizontalAlignment('left');
+    .setVerticalAlignment("middle")
+    .setHorizontalAlignment("center")
+    .setFontFamily("Roboto Mono");
+  outSvar
+    .getRange(2, 1, rows, 1)
+    .setBackground("#efefef")
+    .setHorizontalAlignment("left");
 
   outSvar.setColumnWidths(2, cols - 1, 30);
   outSvar.setColumnWidth(1, 240);
@@ -192,17 +193,18 @@ function updateDataMaster() {
  * @param {Array<any>} data from the response spreadsheet.
  */
 function addDataMasterInformation(ss, data) {
-  const sheet = ss.getSheetByName('Informasjon') || ss.insertSheet('Informasjon');
+  const sheet =
+    ss.getSheetByName("Informasjon") || ss.insertSheet("Informasjon");
   sheet.clear();
 
   sheet.getRange(1, 1, 3, 2).setValues([
-    ['Dokument oppdatert', new Date().toJSON()],
-    ['Script versjon', `v${config.version}`],
-    ['Antall Svar', data.length],
+    ["Dokument oppdatert", new Date().toJSON()],
+    ["Script versjon", `v${config.version}`],
+    ["Antall Svar", data.length],
   ]);
 
   sheet.setColumnWidths(1, 2, 200);
-  sheet.getRange(1, 1, sheet.getLastRow(), 1).setFontWeight('bold');
+  sheet.getRange(1, 1, sheet.getLastRow(), 1).setFontWeight("bold");
 
   removeUnusedRows(sheet);
   removeUnusedColumns(sheet);
@@ -225,7 +227,7 @@ function updateGroupDocument(gruppeleder) {
   // addTestGraph(ss, gruppeleder);
   addInformation(ss, gruppeleder);
 
-  removeSheet(ss, 'Sheet1');
+  removeSheet(ss, "Sheet1");
 
   return filename;
 }
@@ -253,15 +255,19 @@ function reorderDataset(data) {
 function insertGruppeoversiktHeaders(sheet, competencies, motivation, gruppe) {
   const headers = competencies.concat(motivation);
 
-  sheet.getRange(1, 1).setValue(gruppe.visningsnavn).setFontSize(14).setFontWeight('bold');
+  sheet
+    .getRange(1, 1)
+    .setValue(gruppe.visningsnavn)
+    .setFontSize(14)
+    .setFontWeight("bold");
   sheet
     .getRange(1, 2, 1, headers.length)
     .setValues([headers])
     .setFontSize(10)
-    .setFontWeight('bold')
+    .setFontWeight("bold")
     .setTextRotation(45)
-    .setVerticalAlignment('bottom')
-    .setHorizontalAlignment('left');
+    .setVerticalAlignment("bottom")
+    .setHorizontalAlignment("left");
   sheet.setColumnWidths(1, 1, 240);
   sheet.setColumnWidths(2, sheet.getLastColumn() - 1, 30);
 
@@ -276,11 +282,29 @@ function insertGruppeoversiktHeaders(sheet, competencies, motivation, gruppe) {
   sheet
     .getRange(1, 2, 1, competencies.length)
     .setBackground(config.colors.competencies.header)
-    .setBorder(true, false, false, false, true, false, config.colors.competencies.header, null);
+    .setBorder(
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      config.colors.competencies.header,
+      null
+    );
   sheet
     .getRange(1, 2 + competencies.length, 1, motivation.length)
     .setBackground(config.colors.motivation.header)
-    .setBorder(true, false, false, false, true, false, config.colors.motivation.header, null);
+    .setBorder(
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      config.colors.motivation.header,
+      null
+    );
 }
 
 /**
@@ -289,7 +313,9 @@ function insertGruppeoversiktHeaders(sheet, competencies, motivation, gruppe) {
  * @param {*} gruppeleder
  */
 function addKompetanseVsMotivasjon(ss, gruppeleder) {
-  const sheet = ss.getSheetByName('Kompetanse vs Motivasjon') || ss.insertSheet('Kompetanse vs Motivasjon');
+  const sheet =
+    ss.getSheetByName("Kompetanse vs Motivasjon") ||
+    ss.insertSheet("Kompetanse vs Motivasjon");
   sheet.clear();
 
   const titlePos = populateKompVsMotCompetencyColumn(sheet);
@@ -304,31 +330,36 @@ function addKompetanseVsMotivasjon(ss, gruppeleder) {
   const comp = ansattdata[gruppeleder.ansatte[0].googleid].competencies.length;
   const mots = ansattdata[gruppeleder.ansatte[0].googleid].motivations.length;
 
-  const go = ss.getSheetByName('Gruppeoversikt');
+  const go = ss.getSheetByName("Gruppeoversikt");
   const a1comp = go.getRange(2, 2, go.getLastRow() - 1, comp).getA1Notation();
-  const a1mots = go.getRange(2, 2 + comp, go.getLastRow(), mots).getA1Notation();
+  const a1mots = go
+    .getRange(2, 2 + comp, go.getLastRow(), mots)
+    .getA1Notation();
 
   const a1catHeaders = go.getRange(1, 2, 1, comp).getA1Notation();
   const a1motHeaders = go.getRange(1, 2 + comp, 1, mots).getA1Notation();
 
   for (let i = 3; i <= sheet.getLastRow(); i++) {
     if (titlePos.includes(i)) {
-      const nextValue = titlePos[titlePos.indexOf(i) + 1] || sheet.getLastRow() + 1;
+      const nextValue =
+        titlePos[titlePos.indexOf(i) + 1] || sheet.getLastRow() + 1;
       const rows = nextValue - i - 1;
       for (let j = 2; j < ansattnavn.length + 2; j++) {
         // console.log("Average comp:", i, j, rows);
         const avgCompA1 = sheet.getRange(i + 1, j, rows, 1).getA1Notation();
-        const avgMotA1 = sheet.getRange(i + 1, j + ansattnavn.length + 1, rows, 1).getA1Notation();
+        const avgMotA1 = sheet
+          .getRange(i + 1, j + ansattnavn.length + 1, rows, 1)
+          .getA1Notation();
 
         sheet
           .getRange(i, j, 1, 1)
           .setValue(`=IFERROR(AVERAGE(${avgCompA1}))`)
-          .setNumberFormat('0.0')
+          .setNumberFormat("0.0")
           .setBorder(true, false, true, false, null, null);
         sheet
           .getRange(i, j + ansattnavn.length + 1, 1, 1)
           .setValue(`=IFERROR(AVERAGE(${avgMotA1}))`)
-          .setNumberFormat('0.0')
+          .setNumberFormat("0.0")
           .setBorder(true, false, true, false, null, null);
       }
       continue;
@@ -336,7 +367,9 @@ function addKompetanseVsMotivasjon(ss, gruppeleder) {
     // row for competencies
     sheet
       .getRange(i, 2)
-      .setValue(`=TRANSPOSE(FILTER('Gruppeoversikt'!${a1comp}, 'Gruppeoversikt'!${a1catHeaders} = $A${i}))`);
+      .setValue(
+        `=TRANSPOSE(FILTER('Gruppeoversikt'!${a1comp}, 'Gruppeoversikt'!${a1catHeaders} = $A${i}))`
+      );
 
     // row for motivation
     sheet
@@ -349,12 +382,19 @@ function addKompetanseVsMotivasjon(ss, gruppeleder) {
   sheet
     .getRange(3, 2, sheet.getLastRow(), 2 + ansattnavn.length * 2)
     .setFontSize(8)
-    .setHorizontalAlignment('center')
-    .setVerticalAlignment('middle');
+    .setHorizontalAlignment("center")
+    .setVerticalAlignment("middle");
 
-  const compRule = getCompetenciesFormatRule(sheet.getRange(3, 2, sheet.getLastRow(), ansattnavn.length));
+  const compRule = getCompetenciesFormatRule(
+    sheet.getRange(3, 2, sheet.getLastRow(), ansattnavn.length)
+  );
   const motsRule = getMotivationsFormatRule(
-    sheet.getRange(3, 3 + ansattnavn.length, sheet.getLastRow(), ansattnavn.length)
+    sheet.getRange(
+      3,
+      3 + ansattnavn.length,
+      sheet.getLastRow(),
+      ansattnavn.length
+    )
   );
 
   let rules = sheet.getConditionalFormatRules();
@@ -365,9 +405,9 @@ function addKompetanseVsMotivasjon(ss, gruppeleder) {
   sheet.setColumnWidth(sheet.getLastColumn() + 1, 300);
   sheet
     .getRange(1, sheet.getLastColumn() + 1, sheet.getLastRow(), 1)
-    .setBackground('#ffffff')
-    .setFontColor('#ffffff')
-    .setValue('x');
+    .setBackground("#ffffff")
+    .setFontColor("#ffffff")
+    .setValue("x");
 
   removeUnusedRows(sheet);
   removeUnusedColumns(sheet);
@@ -379,18 +419,19 @@ function addKompetanseVsMotivasjon(ss, gruppeleder) {
  * @param {*} gruppe
  */
 function addInformation(ss, gruppe) {
-  const sheet = ss.getSheetByName('Informasjon') || ss.insertSheet('Informasjon');
+  const sheet =
+    ss.getSheetByName("Informasjon") || ss.insertSheet("Informasjon");
   sheet.clear();
 
   sheet.getRange(1, 1, 4, 2).setValues([
-    ['Gruppeleder', gruppe.visningsnavn],
-    ['Google ID', gruppe.googleid],
-    ['Dokument oppdatert', new Date().toJSON()],
-    ['Script versjon', `v${config.version}`],
+    ["Gruppeleder", gruppe.visningsnavn],
+    ["Google ID", gruppe.googleid],
+    ["Dokument oppdatert", new Date().toJSON()],
+    ["Script versjon", `v${config.version}`],
   ]);
 
   sheet.setColumnWidths(1, 2, 200);
-  sheet.getRange(1, 1, sheet.getLastRow(), 1).setFontWeight('bold');
+  sheet.getRange(1, 1, sheet.getLastRow(), 1).setFontWeight("bold");
 
   removeUnusedRows(sheet);
   removeUnusedColumns(sheet);
@@ -401,7 +442,10 @@ function removeUnusedRows(sheet) {
     return;
   }
 
-  sheet.deleteRows(sheet.getLastRow() + 1, sheet.getMaxRows() - sheet.getLastRow());
+  sheet.deleteRows(
+    sheet.getLastRow() + 1,
+    sheet.getMaxRows() - sheet.getLastRow()
+  );
 }
 
 function removeUnusedColumns(sheet) {
@@ -409,7 +453,10 @@ function removeUnusedColumns(sheet) {
     return;
   }
 
-  sheet.deleteColumns(sheet.getLastColumn() + 1, sheet.getMaxColumns() - sheet.getLastColumn());
+  sheet.deleteColumns(
+    sheet.getLastColumn() + 1,
+    sheet.getMaxColumns() - sheet.getLastColumn()
+  );
 }
 
 /**
@@ -419,7 +466,8 @@ function removeUnusedColumns(sheet) {
  * @param {KIONGroup} gruppe
  */
 function addGruppeoversikt(ss, gruppe) {
-  const sheetOverview = ss.getSheetByName('Gruppeoversikt') || ss.insertSheet('Gruppeoversikt');
+  const sheetOverview =
+    ss.getSheetByName("Gruppeoversikt") || ss.insertSheet("Gruppeoversikt");
 
   sheetOverview.clear();
 
@@ -450,8 +498,8 @@ function addGruppeoversikt(ss, gruppe) {
       .getRange(2, 1, all.length, all[0].length)
       .setValues(all)
       .setFontSize(8)
-      .setVerticalAlignment('middle')
-      .setHorizontalAlignment('center');
+      .setVerticalAlignment("middle")
+      .setHorizontalAlignment("center");
   }
 
   // -------------------------------------------------------------------------
@@ -460,16 +508,26 @@ function addGruppeoversikt(ss, gruppe) {
   sheetOverview
     .getRange(2, 1, sheetOverview.getLastRow(), 1)
     .setFontSize(10)
-    .setHorizontalAlignment('left')
-    .setVerticalAlignment('middle');
+    .setHorizontalAlignment("left")
+    .setVerticalAlignment("middle");
 
   // -------------------------------------------------------------------------
   // Adds conditional format rules to a sheet
   // -------------------------------------------------------------------------
-  const catRange = sheetOverview.getRange(2, 2, sheetOverview.getLastRow(), competencies.length);
+  const catRange = sheetOverview.getRange(
+    2,
+    2,
+    sheetOverview.getLastRow(),
+    competencies.length
+  );
   const catRule = getCompetenciesFormatRule(catRange);
 
-  const motRange = sheetOverview.getRange(2, 2 + competencies.length, sheetOverview.getLastRow(), motivation.length);
+  const motRange = sheetOverview.getRange(
+    2,
+    2 + competencies.length,
+    sheetOverview.getLastRow(),
+    motivation.length
+  );
   const motRule = getMotivationsFormatRule(motRange);
 
   let rules = sheetOverview.getConditionalFormatRules();
@@ -485,7 +543,7 @@ function addGruppeoversikt(ss, gruppe) {
  * @param {SpreadSheet} ss
  * @param {string} name
  */
-function removeSheet(ss, name = 'Sheet1') {
+function removeSheet(ss, name = "Sheet1") {
   const dummy = ss.getSheetByName(name);
   if (dummy) {
     ss.deleteSheet(dummy);
@@ -528,8 +586,8 @@ function getMissingEmployees(employees, data) {
   const missing = [];
   employees.forEach((a) => {
     if (!data.find((r) => r[1] === a.googleid)) {
-      const row = new Array(data[0].length - 2).fill('');
-      row.unshift('', a.googleid);
+      const row = new Array(data[0].length - 2).fill("");
+      row.unshift("", a.googleid);
       missing.push(row);
     }
   });
@@ -580,10 +638,10 @@ function getCategories() {
 
   data.slice(1).forEach((row) => {
     for (i = 0; i < row.length; i++) {
-      if (typeof categories[titles[i]] === 'undefined') {
+      if (typeof categories[titles[i]] === "undefined") {
         categories[titles[i]] = [];
       }
-      if (typeof row[i] === 'string' && row[i].length > 0) {
+      if (typeof row[i] === "string" && row[i].length > 0) {
         categories[titles[i]].push(row[i]);
       }
     }
@@ -611,7 +669,7 @@ function getGroupManagers() {
           googleid: row[2],
           lederid: row[6],
           navn: row[0],
-          visningsnavn: row[0].split(',').reverse().join(' ').trim(),
+          visningsnavn: row[0].split(",").reverse().join(" ").trim(),
           brukernavn: row[3],
         };
         item.ansatte.push(ansatt);
@@ -631,7 +689,9 @@ function getGroupManagers() {
  */
 function getLedereList() {
   const sheet = config.sheets.ledere;
-  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn() - 1).getValues();
+  const values = sheet
+    .getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn() - 1)
+    .getValues();
 
   const headers = values.shift();
 
@@ -639,7 +699,7 @@ function getLedereList() {
     .map((row) => {
       let res = {};
       for (i = 0; i < headers.length; i++) {
-        res[headers[i].replace(/\s+/g, '').toLowerCase()] = row[i];
+        res[headers[i].replace(/\s+/g, "").toLowerCase()] = row[i];
       }
       res.visningsnavn = `${res.fornavn} ${res.etternavn}`;
       return res;
@@ -652,9 +712,12 @@ function getLedereList() {
  */
 function createOrFetchSpreadsheet(filename) {
   const file = getExistingFile(filename);
-  const ss = file !== false ? SpreadsheetApp.open(file) : SpreadsheetApp.create(filename);
+  const ss =
+    file !== false
+      ? SpreadsheetApp.open(file)
+      : SpreadsheetApp.create(filename);
 
-  console.log('Got sheet:', ss.getName(), ss.getUrl());
+  console.log("Got sheet:", ss.getName(), ss.getUrl());
   return ss;
 }
 
@@ -681,14 +744,14 @@ function getExistingFile(filename) {
 function getHmacSHA256SigAsUUID(input) {
   const sig = Utilities.computeHmacSha256Signature(input, secrets.hmac_secret)
     .map((chr) => (chr + 256).toString(16).slice(-2))
-    .join('');
+    .join("");
   return [
     sig.substring(0, 8),
     sig.substring(8, 12),
     sig.substring(12, 16),
     sig.substring(16, 20),
     sig.substring(20, 32),
-  ].join('-');
+  ].join("-");
 }
 
 /**
@@ -701,38 +764,56 @@ function formatCompVsMotHeaders(ansattnavn, sheet) {
   sheet
     .getRange(1, 2, 1, ansattnavn.length)
     .setValues([ansattnavn])
-    .setHorizontalAlignment('left')
-    .setVerticalAlignment('bottom')
-    .setFontWeight('bold')
+    .setHorizontalAlignment("left")
+    .setVerticalAlignment("bottom")
+    .setFontWeight("bold")
     .setTextRotation(45)
     .setBackground(config.colors.competencies.header)
-    .setBorder(true, false, false, false, true, false, config.colors.competencies.header, null);
+    .setBorder(
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      config.colors.competencies.header,
+      null
+    );
 
   sheet
     .getRange(1, 2 + ansattnavn.length + 1, 1, ansattnavn.length)
     .setValues([ansattnavn])
-    .setHorizontalAlignment('left')
-    .setVerticalAlignment('bottom')
-    .setFontWeight('bold')
+    .setHorizontalAlignment("left")
+    .setVerticalAlignment("bottom")
+    .setFontWeight("bold")
     .setTextRotation(45)
     .setBackground(config.colors.motivation.header)
-    .setBorder(true, false, false, false, true, false, config.colors.motivation.header, null);
+    .setBorder(
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      config.colors.motivation.header,
+      null
+    );
 
   sheet
     .getRange(2, 2, 1, ansattnavn.length)
     .merge()
-    .setValue('Kompetanse')
-    .setFontWeight('bold')
-    .setVerticalAlignment('middle')
-    .setHorizontalAlignment('center')
+    .setValue("Kompetanse")
+    .setFontWeight("bold")
+    .setVerticalAlignment("middle")
+    .setHorizontalAlignment("center")
     .setBackground(config.colors.competencies.gradient.max);
   sheet
     .getRange(2, 2 + ansattnavn.length + 1, 1, ansattnavn.length)
     .merge()
-    .setValue('Motivasjon')
-    .setFontWeight('bold')
-    .setVerticalAlignment('middle')
-    .setHorizontalAlignment('center')
+    .setValue("Motivasjon")
+    .setFontWeight("bold")
+    .setVerticalAlignment("middle")
+    .setHorizontalAlignment("center")
     .setBackground(config.colors.motivation.gradient.max);
 
   // Set width of all columns used to show data.
@@ -774,7 +855,7 @@ function populateKompVsMotCompetencyColumn(sheet) {
 
   sheet.getRange(titlePos[0], 1, data.length, 1).setValues(data);
   titlePos.forEach((pos) => {
-    sheet.getRange(pos, 1).setFontWeight('bold').setBackground('#efefef');
+    sheet.getRange(pos, 1).setFontWeight("bold").setBackground("#efefef");
   });
 
   sheet.setColumnWidth(1, 300);
