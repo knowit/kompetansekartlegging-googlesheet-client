@@ -1,0 +1,16 @@
+{
+  "name": "kompetansekartlegging",
+  "version": "1.0.1",
+  "author": "thomas.malt@knowit.no",
+  "description": "Knowit Kompetansekartlegging 2020",
+  "dependencies": {
+    "@types/google-apps-script": "^1.0.14"
+  },
+  "devDependencies": {
+    "prettier": "^2.0.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "UNLICENSED"
+}
