@@ -735,8 +735,8 @@ function getExistingFile(filename) {
 }
 
 /**
- * Poor mans ID generator. Truncates the HMAC SHA256 signature to 128bits and Mimics an UUID for aesthetics.
- * ID should be consistent through updates though.
+ * Poor mans ID generator. Truncates the HMAC SHA256 signature to 128bits and
+ * Mimics an UUID for aesthetics. ID should be consistent through updates though.
  *
  * @param input string
  * @return UUID compatible string.
