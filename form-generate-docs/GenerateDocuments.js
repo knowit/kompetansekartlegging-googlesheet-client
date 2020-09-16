@@ -12,7 +12,7 @@ const spreadsheets = {
 };
 
 const config = {
-  version: "1.0.19",
+  version: "1.1.0",
   sheets: {
     svar: SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Skjemasvar 1"),
     kategorier: spreadsheets.grupper.getSheetByName("Kategorier"),
