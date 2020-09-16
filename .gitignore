@@ -1,2 +1,5 @@
 clasprc.knowit.json
 node_modules
+form-generate-docs/Secrets.js
+form-generate-docs/.clasp.json
+insight-sales-reports/.clasp.json
