@@ -1,6 +1,6 @@
 # kompetansekartlegging
 
-Dette repoet inneholder kode og scripts for å gjennomfære Knowit Objectnets
+Dette repoet inneholder kode og scripts for å gjennomføre Knowit Objectnets
 årlige kompetansekartlegging.
 
 Per i dag består det hovedsaklig av Google Apps Script filer som er knyttet til
