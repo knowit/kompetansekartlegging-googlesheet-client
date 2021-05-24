@@ -2,8 +2,6 @@
  * Test
  */
 
-function updateCompetencyData() {}
-
 interface Question {
   text: string; // 'Relasjonsdatabaser som Postgres, Oracle o.l.',
   topic: string; // topic: 'Relasjonsdatabaser',
@@ -22,26 +20,32 @@ interface TaxonomyTree {
   [key: string]: string;
 }
 
-function deriveTaxonomy(data: any) {
-  const tree = {};
+function _fetch(url: string): any {
+  console.log('fetching url:', url);
 
-  data[0].answers.forEach((el: Answer) => {
-    const q: Question = el.question;
-    tree[q.category] = {};
-    tree[q.category][q.topic] = q.id;
+  const res = UrlFetchApp.fetch(url, {
+    headers: {
+      'x-api-key': config.apikey,
+    },
   });
+  const status = res.getResponseCode();
+  if (status !== 200) {
+    console.log(`status: ${status}. Aborting update.`);
+    return;
+  }
+  console.log(`status: ${status}. Continuing`);
 
-  return tree;
+  return JSON.parse(res.getContentText());
 }
 
 /**
- * Fetches data for competency mapping
+ * Fetches complete list of users having completed the competency mapping survey
  *
- * @returns list of competency data
+ * @returns list of users in the competency mapping database
  * @customfunction
  */
-function getCompetencyData() {
-  const res = UrlFetchApp.fetch(config.url, {
+function getUserList() {
+  const res = UrlFetchApp.fetch(config.urls.users, {
     headers: {
       'x-api-key': config.apikey,
     },
@@ -52,30 +56,64 @@ function getCompetencyData() {
     console.log(`status: ${status}. Aborting update.`);
     return;
   }
-
   console.log(`status: ${status}. Continuing`);
 
   const data = JSON.parse(res.getContentText());
-  console.log(data[0].answers);
-  const taxonomy = deriveTaxonomy(data);
-  console.log(taxonomy);
-  const categories = Object.keys(taxonomy).sort();
-  categories.unshift('epost', 'timestamp');
-  const output = data.map((row: any) => {
-    return [row.email, row.updatedAt];
-  });
+  const output = data
+    .map((user) => [user.attributes[0].Value, user.username])
+    .filter((e) => e[0] !== 'user@user.user')
+    .sort((a, b) => (a[0] > b[0] ? 1 : -1));
 
-  output.unshift([...categories]);
-  console.log(output);
   return output;
 }
 
 /**
- * Fetches data and derives only taxonomy (competency catalog)
+ * Fetches the latest answers for user by id.
  *
- * @returns matrix of competencies
+ * @param username string
+ * @returns
  * @customfunction
  */
-function getTaxonomy() {
-  // foo
+function getAnswersForUsername(username: string) {
+  const data = _fetch(`${config.urls.answers}/${username}/newest`);
+  const questions = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/questions`);
+  const qlist = questions.map((q) => q.id).sort();
+
+  console.log(qlist);
+
+  const answers = qlist.map((id) => {
+    const found = data.answers.find((a) => id === a.question.id);
+    return found ? found.knowledge : '';
+  });
+  const output = [data.updatedAt].concat(answers);
+
+  return output;
+}
+
+/**
+ * Fetches latest categories. Currently hard coded to id of latest catalog
+ *
+ * @returns
+ * @customfunction
+ */
+function getCategories() {
+  const data = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/categories`);
+  const output = data.map((c) => [c.index, c.text, c.id, c.description]).sort((a, b) => (a[0] > b[0] ? 1 : -1));
+
+  return output;
+}
+
+/**
+ * Fetches latest question catalog. Currently hard coded to id of latest catalog
+ *
+ * @returns
+ * @customfunction
+ */
+function getQuestions() {
+  const data = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/questions`);
+
+  const output = data
+    .map((q) => [q.index, q.topic, q.text, q.type, q.id, q.categoryID])
+    .sort((a, b) => (a[5] > b[5] ? 1 : -1));
+  return output;
 }
