@@ -20,6 +20,12 @@ interface TaxonomyTree {
   [key: string]: string;
 }
 
+/**
+ * Wrapper for the ugly UrlFetchApp.fetch function
+ *
+ * @param url string - the URL to fetch
+ * @returns any - the object return from JSON.parse
+ */
 function _fetch(url: string): any {
   console.log('fetching url:', url);
 
@@ -67,6 +73,8 @@ function getUserList() {
   return output;
 }
 
+type KnowledgeMotivation = 'knowledge' | 'motivation';
+
 /**
  * Fetches the latest answers for user by id.
  *
@@ -74,7 +82,7 @@ function getUserList() {
  * @returns
  * @customfunction
  */
-function getAnswersForUsername(username: string) {
+function getAnswersForUsername(username: string, type: KnowledgeMotivation) {
   const data = _fetch(`${config.urls.answers}/${username}/newest`);
   const questions = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/questions`);
   const qlist = questions.map((q) => q.id).sort();
@@ -83,11 +91,40 @@ function getAnswersForUsername(username: string) {
 
   const answers = qlist.map((id) => {
     const found = data.answers.find((a) => id === a.question.id);
-    return found ? found.knowledge : '';
+    if (!found) return '';
+    if (type === 'knowledge') {
+      return found.knowledge ? found.knowledge : '';
+    }
+    if (type === 'motivation') {
+      return found.motivation ? found.motivation : '';
+    }
+    return '';
   });
   const output = [data.updatedAt].concat(answers);
 
   return output;
+}
+
+/**
+ * Fetches all the answers for a user.
+ *
+ * @param username string
+ * @returns array range of answers unordered
+ * @customfunction
+ */
+function getAllAnswersForUsername(username: string): any {
+  const data = _fetch(`${config.urls.answers}/${username}/newest`);
+
+  const answers = data.answers.map((a: Answer) => [
+    a.question.id,
+    a.updatedAt,
+    a.question.topic,
+    a.question.category,
+    a.knowledge,
+    a.motivation,
+  ]);
+
+  return answers;
 }
 
 /**
