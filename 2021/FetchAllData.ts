@@ -44,11 +44,17 @@ function _fetch(url: string): any {
   return JSON.parse(res.getContentText());
 }
 
-function generateDataSheet() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  const name = sheet.getName();
+function transpose(a: any[][]): any[][] {
+  return a[0].map((_, i) => a.map((x) => x[i]));
+}
 
-  sheet.clear();
+/**
+ * Updates and writes data to the data sheet
+ */
+function generateDataSheet() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('data');
+
+  sheet.clearContents();
 
   const users = getUserList();
   const categories = getCategoriesData();
@@ -66,11 +72,45 @@ function generateDataSheet() {
       if (catMap.has(e[5])) {
         e.push(catMap.get(e[5]));
       }
-      return [e[4], e[6], e[1]];
+      return [e[6], e[1], e[4]];
     });
 
-  sheet.getRange(3, 1, users.length, 2).setValues(users);
-  sheet.getRange(3, 3, questions.length, 7).setValues(questions);
+  const all = getAllAnswersData()
+    .map((u) => {
+      let r = [u.email, u.username, u.updatedAt];
+
+      const answers = new Map();
+      u.answers.forEach((a) => {
+        if (typeof a.customScaleValue !== 'undefined') return;
+        answers.set(a.question.id, {
+          knowledge: a.knowledge,
+          motivation: a.motivation,
+        });
+      });
+
+      questions.forEach((q) => {
+        const id = q[2];
+        if (answers.has(id)) {
+          const a = answers.get(id);
+          r.push(a.knowledge);
+        } else {
+          r.push('');
+        }
+      });
+
+      return r;
+    })
+    .sort((a, b) => (a[0] > b[0] ? 1 : -1));
+
+  const transposed = transpose(questions);
+
+  const updated = `Last updated: ${new Date().toLocaleString('se')}`;
+
+  sheet.getRange(3, 1, 1, 3).setValues([['email', 'user id', 'updated at']]);
+  // sheet.getRange(4, 1, users.length, 2).setValues(users);
+  sheet.getRange(4, 1, all.length, all[0].length).setValues(all);
+  sheet.getRange(1, 4, transposed.length, transposed[0].length).setValues(transposed);
+  sheet.getRange(1, 1).setValue(updated);
 }
 
 /**
@@ -158,6 +198,10 @@ function getAllAnswersForUsername(username: string): any {
 
 function getCategoriesData() {
   return _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/categories`);
+}
+
+function getAllAnswersData() {
+  return _fetch(config.urls.answers);
 }
 
 /**
