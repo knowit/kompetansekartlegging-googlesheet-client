@@ -44,6 +44,35 @@ function _fetch(url: string): any {
   return JSON.parse(res.getContentText());
 }
 
+function generateDataSheet() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const name = sheet.getName();
+
+  sheet.clear();
+
+  const users = getUserList();
+  const categories = getCategoriesData();
+  let catMap = new Map();
+
+  categories.forEach((e) => {
+    catMap.set(e.id, e.text);
+  });
+
+  // console.log('catmap', catMap.keys());
+  const questions = getQuestions()
+    .filter((a) => a[3] === 'knowledgeMotivation')
+    .sort((a, b) => a[0] - b[0])
+    .map((e) => {
+      if (catMap.has(e[5])) {
+        e.push(catMap.get(e[5]));
+      }
+      return [e[4], e[6], e[1]];
+    });
+
+  sheet.getRange(3, 1, users.length, 2).setValues(users);
+  sheet.getRange(3, 3, questions.length, 7).setValues(questions);
+}
+
 /**
  * Fetches complete list of users having completed the competency mapping survey
  *
@@ -87,7 +116,7 @@ function getAnswersForUsername(username: string, type: KnowledgeMotivation) {
   const questions = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/questions`);
   const qlist = questions.map((q) => q.id).sort();
 
-  console.log(qlist);
+  // console.log(qlist);
 
   const answers = qlist.map((id) => {
     const found = data.answers.find((a) => id === a.question.id);
@@ -127,6 +156,10 @@ function getAllAnswersForUsername(username: string): any {
   return answers;
 }
 
+function getCategoriesData() {
+  return _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/categories`);
+}
+
 /**
  * Fetches latest categories. Currently hard coded to id of latest catalog
  *
@@ -134,8 +167,9 @@ function getAllAnswersForUsername(username: string): any {
  * @customfunction
  */
 function getCategories() {
-  const data = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/categories`);
-  const output = data.map((c) => [c.index, c.text, c.id, c.description]).sort((a, b) => (a[0] > b[0] ? 1 : -1));
+  const output = getCategoriesData()
+    .map((c) => [c.index, c.text, c.id, c.description])
+    .sort((a, b) => (a[0] > b[0] ? 1 : -1));
 
   return output;
 }
@@ -148,7 +182,6 @@ function getCategories() {
  */
 function getQuestions() {
   const data = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/questions`);
-
   const output = data
     .map((q) => [q.index, q.topic, q.text, q.type, q.id, q.categoryID])
     .sort((a, b) => (a[5] > b[5] ? 1 : -1));
