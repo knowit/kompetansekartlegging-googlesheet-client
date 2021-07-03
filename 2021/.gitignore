@@ -3,3 +3,4 @@ Config.ts
 comp.json
 llu.json
 queries.http
+*.json

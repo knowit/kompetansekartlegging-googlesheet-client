@@ -52,12 +52,15 @@ function transpose(a: any[][]): any[][] {
  * Updates and writes data to the data sheet
  */
 function generateDataSheet() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('data');
+  const sData = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('data');
+  const sNotAnswered = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('not answered');
 
-  sheet.clearContents();
+  sData.clearContents();
+  sNotAnswered.clearContents();
 
-  const users = getUserList();
+  const users = getUserList().map((u) => u[0]);
   const categories = getCategoriesData();
+
   let catMap = new Map();
 
   categories.forEach((e) => {
@@ -65,7 +68,8 @@ function generateDataSheet() {
   });
 
   // console.log('catmap', catMap.keys());
-  const questions = getQuestions()
+  const allQuestions = getQuestions();
+  const compQuestions = allQuestions
     .filter((a) => a[3] === 'knowledgeMotivation')
     .sort((a, b) => a[0] - b[0])
     .map((e) => {
@@ -75,20 +79,45 @@ function generateDataSheet() {
       return [e[6], e[1], e[4]];
     });
 
+  const jobQuestions = allQuestions
+    .filter((a) => a[3] === 'customScaleLabels')
+    .sort((a, b) => (a[4] > b[4] ? 1 : -1))
+    .map((e) => {
+      if (catMap.has(e[5])) e.push(catMap.get(e[5]));
+      return [e[6], e[1], e[4]];
+    });
+
+  console.log('job questions:', jobQuestions);
+  const questions = jobQuestions.concat(compQuestions);
+
   const all = getAllAnswersData()
     .map((u) => {
-      let r = [u.email, u.username, u.updatedAt];
+      let r = [u.email, u.username, u.updatedAt.slice(0, 10)];
 
       const answers = new Map();
+      const seenJobs = new Set();
+      let jobs = [];
       u.answers.forEach((a) => {
-        if (typeof a.customScaleValue !== 'undefined') return;
-        answers.set(a.question.id, {
-          knowledge: a.knowledge,
-          motivation: a.motivation,
-        });
+        if (typeof a.customScaleValue !== 'undefined') {
+          if (!seenJobs.has(a.question.id)) {
+            jobs.push([a.question.id, a.customScaleValue]);
+            seenJobs.add(a.question.id);
+          }
+        } else {
+          answers.set(a.question.id, {
+            knowledge: a.knowledge,
+            motivation: a.motivation,
+          });
+        }
       });
 
-      questions.forEach((q) => {
+      jobs = jobs.sort((a, b) => (a[0] > b[0] ? 1 : -1)).map((a) => a[1]);
+      while (jobs.length < 2) {
+        jobs.push('');
+      }
+      r.push(...jobs);
+
+      compQuestions.forEach((q) => {
         const id = q[2];
         if (answers.has(id)) {
           const a = answers.get(id);
@@ -97,20 +126,29 @@ function generateDataSheet() {
           r.push('');
         }
       });
-
       return r;
     })
     .sort((a, b) => (a[0] > b[0] ? 1 : -1));
 
-  const transposed = transpose(questions);
+  all.forEach((e) => {
+    if (e.length > 156) {
+      console.log('length:', e.length);
+      console.log('length:', e);
+    }
+  });
 
+  const answered = all.map((u) => u[0]);
+  const notAnswered = users.filter((u) => !answered.includes(u)).map((u) => [u]);
+  const transposed = transpose(questions);
   const updated = `Last updated: ${new Date().toLocaleString('se')}`;
 
-  sheet.getRange(3, 1, 1, 3).setValues([['email', 'user id', 'updated at']]);
-  // sheet.getRange(4, 1, users.length, 2).setValues(users);
-  sheet.getRange(4, 1, all.length, all[0].length).setValues(all);
-  sheet.getRange(1, 4, transposed.length, transposed[0].length).setValues(transposed);
-  sheet.getRange(1, 1).setValue(updated);
+  sData.getRange(3, 1, 1, 3).setValues([['email', 'user id', 'updated at']]);
+  sData.getRange(1, 4, transposed.length, transposed[0].length).setValues(transposed);
+  sData.getRange(4, 1, all.length, all[0].length).setValues(all);
+  sData.getRange(1, 1).setValue(updated);
+
+  sNotAnswered.getRange(3, 1, notAnswered.length, 1).setValues(notAnswered);
+  sNotAnswered.getRange(1, 1).setValue(updated);
 }
 
 /**
