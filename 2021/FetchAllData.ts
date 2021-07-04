@@ -1,23 +1,49 @@
 /**
- * Test
+ * Type definitions
  */
-
 interface Question {
+  index: number;
+  type: string;
+  categoryID: string;
   text: string; // 'Relasjonsdatabaser som Postgres, Oracle o.l.',
   topic: string; // topic: 'Relasjonsdatabaser',
-  category: string; // category: 'Backend',
   id: string; // id: 'b1656d08-1f76-443e-a23f-b6179235da75' } },
 }
 
 interface Answer {
-  knowledge: number; // knowledge: 3,
-  motivation: number; //     motivation: 2,
+  knowledge?: number; // knowledge: 3,
+  motivation?: number; //     motivation: 2,
+  customScaleValue?: number;
   updatedAt: string; //     updatedAt: '2021-02-22T12:15:51.688Z',
   question: Question; //     question:
 }
 
 interface TaxonomyTree {
   [key: string]: string;
+}
+
+interface Category {
+  index: number;
+  text: string;
+  description: string;
+  id: string;
+}
+
+interface UserAnswers {
+  username: string;
+  email: string;
+  formDefinitionID: string;
+  updatedAt: string;
+  answers: Answer[];
+}
+
+interface UserAttribute {
+  Name: string;
+  Value: any;
+}
+interface User {
+  username: string;
+  attributes: UserAttribute[];
 }
 
 /**
@@ -53,17 +79,22 @@ function transpose(a: any[][]): any[][] {
  */
 function generateDataSheet() {
   const sData = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('data');
+  if (sData === null) throw new TypeError('Spreadsheet sheet data is null');
+
   const sNotAnswered = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('not answered');
+  if (sNotAnswered === null) throw new TypeError('Spreadsheet sheet not answered is null');
 
   sData.clearContents();
   sNotAnswered.clearContents();
 
   const users = getUserList().map((u) => u[0]);
-  const categories = getCategoriesData();
+  const categories: Category[] = getCategoriesData();
+
+  console.log('categories', categories);
 
   let catMap = new Map();
 
-  categories.forEach((e) => {
+  categories.forEach((e: Category) => {
     catMap.set(e.id, e.text);
   });
 
@@ -91,13 +122,13 @@ function generateDataSheet() {
   const questions = jobQuestions.concat(compQuestions, compQuestions);
 
   const all = getAllAnswersData()
-    .map((u) => {
+    .map((u: UserAnswers) => {
       let r = [u.email, u.username, u.updatedAt.slice(0, 10)];
 
       const answers = new Map();
       const seenJobs = new Set();
 
-      let jobs = [];
+      let jobs: any[] = [];
       u.answers.forEach((a) => {
         if (typeof a.customScaleValue !== 'undefined') {
           // workaround for a bug in backend where some customScaleValues are
@@ -162,29 +193,22 @@ function generateDataSheet() {
   sNotAnswered.getRange(1, 1).setValue(updated);
 }
 
+function getUserListData(): User[] {
+  const data = _fetch(config.urls.users);
+  console.log('userlist', data.slice(0, 3));
+  console.log(data[1]);
+  return data;
+}
+
 /**
- * Fetches complete list of users having completed the competency mapping survey
+ * Fetches list of user emails last synchronised from AD, sorted alphabetically.
  *
- * @returns list of users in the competency mapping database
- * @customfunction
+ * @returns any[]
  */
-function getUserList() {
-  const res = UrlFetchApp.fetch(config.urls.users, {
-    headers: {
-      'x-api-key': config.apikey,
-    },
-  });
-
-  const status = res.getResponseCode();
-  if (status !== 200) {
-    console.log(`status: ${status}. Aborting update.`);
-    return;
-  }
-  console.log(`status: ${status}. Continuing`);
-
-  const data = JSON.parse(res.getContentText());
+function getUserList(): any[] {
+  const data = getUserListData();
   const output = data
-    .map((user) => [user.attributes[0].Value, user.username])
+    .map((user: User) => [user.attributes[0].Value, user.username])
     .filter((e) => e[0] !== 'user@user.user')
     .sort((a, b) => (a[0] > b[0] ? 1 : -1));
 
@@ -202,13 +226,13 @@ type KnowledgeMotivation = 'knowledge' | 'motivation';
  */
 function getAnswersForUsername(username: string, type: KnowledgeMotivation) {
   const data = _fetch(`${config.urls.answers}/${username}/newest`);
-  const questions = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/questions`);
+  const questions: Question[] = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/questions`);
   const qlist = questions.map((q) => q.id).sort();
 
   // console.log(qlist);
 
   const answers = qlist.map((id) => {
-    const found = data.answers.find((a) => id === a.question.id);
+    const found = data.answers.find((a: Answer) => id === a.question.id);
     if (!found) return '';
     if (type === 'knowledge') {
       return found.knowledge ? found.knowledge : '';
@@ -237,7 +261,7 @@ function getAllAnswersForUsername(username: string): any {
     a.question.id,
     a.updatedAt,
     a.question.topic,
-    a.question.category,
+    a.question.categoryID,
     a.knowledge,
     a.motivation,
   ]);
@@ -245,12 +269,14 @@ function getAllAnswersForUsername(username: string): any {
   return answers;
 }
 
-function getCategoriesData() {
+function getCategoriesData(): Category[] {
   return _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/categories`);
 }
 
-function getAllAnswersData() {
-  return _fetch(config.urls.answers);
+function getAllAnswersData(): UserAnswers[] {
+  const data = _fetch(config.urls.answers);
+  console.log('all answers', data);
+  return data;
 }
 
 /**
@@ -267,14 +293,18 @@ function getCategories() {
   return output;
 }
 
+function getQuestionsData(): Question[] {
+  return _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/questions`);
+}
+
 /**
- * Fetches latest question catalog. Currently hard coded to id of latest catalog
+ * Fetches latest question catalog. Currently hard coded to id of latest catalog.
  *
  * @returns
  * @customfunction
  */
-function getQuestions() {
-  const data = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/questions`);
+function getQuestions(): any[] {
+  const data: Question[] = getQuestionsData();
   const output = data
     .map((q) => [q.index, q.topic, q.text, q.type, q.id, q.categoryID])
     .sort((a, b) => (a[5] > b[5] ? 1 : -1));

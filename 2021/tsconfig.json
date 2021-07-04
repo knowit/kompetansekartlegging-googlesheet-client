@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
     "lib": [ "ESNext" ],
-    "strict": false
+    "strict": true
   }
 }
