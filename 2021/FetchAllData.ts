@@ -88,7 +88,7 @@ function generateDataSheet() {
     });
 
   console.log('job questions:', jobQuestions);
-  const questions = jobQuestions.concat(compQuestions);
+  const questions = jobQuestions.concat(compQuestions, compQuestions);
 
   const all = getAllAnswersData()
     .map((u) => {
@@ -96,9 +96,12 @@ function generateDataSheet() {
 
       const answers = new Map();
       const seenJobs = new Set();
+
       let jobs = [];
       u.answers.forEach((a) => {
         if (typeof a.customScaleValue !== 'undefined') {
+          // workaround for a bug in backend where some customScaleValues are
+          // duplicates for some users
           if (!seenJobs.has(a.question.id)) {
             jobs.push([a.question.id, a.customScaleValue]);
             seenJobs.add(a.question.id);
@@ -117,6 +120,7 @@ function generateDataSheet() {
       }
       r.push(...jobs);
 
+      // Add all the knowledge values first
       compQuestions.forEach((q) => {
         const id = q[2];
         if (answers.has(id)) {
@@ -126,28 +130,35 @@ function generateDataSheet() {
           r.push('');
         }
       });
+
+      // Add all the motivation values
+      compQuestions.forEach((q) => {
+        const id = q[2];
+        if (answers.has(id)) {
+          const a = answers.get(id);
+          r.push(a.motivation);
+        } else {
+          r.push('');
+        }
+      });
       return r;
     })
-    .sort((a, b) => (a[0] > b[0] ? 1 : -1));
-
-  all.forEach((e) => {
-    if (e.length > 156) {
-      console.log('length:', e.length);
-      console.log('length:', e);
-    }
-  });
+    .sort((a, b) => (a[0] > b[0] ? 1 : -1)); // Sort by email
 
   const answered = all.map((u) => u[0]);
   const notAnswered = users.filter((u) => !answered.includes(u)).map((u) => [u]);
   const transposed = transpose(questions);
   const updated = `Last updated: ${new Date().toLocaleString('se')}`;
 
-  sData.getRange(3, 1, 1, 3).setValues([['email', 'user id', 'updated at']]);
-  sData.getRange(1, 4, transposed.length, transposed[0].length).setValues(transposed);
-  sData.getRange(4, 1, all.length, all[0].length).setValues(all);
+  sData.getRange(4, 1, 1, 3).setValues([['email', 'user id', 'updated at']]);
+  sData.getRange(2, 4, transposed.length, transposed[0].length).setValues(transposed);
+  sData.getRange(5, 1, all.length, all[0].length).setValues(all);
+  sData.getRange(1, 6).setValue('Kompetanse');
+  sData.getRange(1, 157).setValue('Motivasjon');
   sData.getRange(1, 1).setValue(updated);
 
   sNotAnswered.getRange(3, 1, notAnswered.length, 1).setValues(notAnswered);
+  sNotAnswered.getRange(2, 1).setValue('email');
   sNotAnswered.getRange(1, 1).setValue(updated);
 }
 
