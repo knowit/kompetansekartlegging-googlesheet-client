@@ -1,6 +1,6 @@
 {
   "name": "kompetansekartlegging",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "author": "thomas.malt@knowit.no",
   "description": "Knowit Kompetansekartlegging 2020",
   "dependencies": {
