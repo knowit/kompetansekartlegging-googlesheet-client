@@ -187,10 +187,11 @@ function generateDataSheet() {
   sData.getRange(1, 6).setValue('Kompetanse');
   sData.getRange(1, 157).setValue('Motivasjon');
   sData.getRange(1, 1).setValue(updated);
-
-  sNotAnswered.getRange(3, 1, notAnswered.length, 1).setValues(notAnswered);
-  sNotAnswered.getRange(2, 1).setValue('email');
-  sNotAnswered.getRange(1, 1).setValue(updated);
+  if (notAnswered.length > 0) {
+    sNotAnswered.getRange(3, 1, notAnswered.length, 1).setValues(notAnswered);
+    sNotAnswered.getRange(2, 1).setValue('email');
+    sNotAnswered.getRange(1, 1).setValue(updated);
+  }
 }
 
 function getUserListData(): User[] {
