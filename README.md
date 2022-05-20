@@ -1,4 +1,4 @@
-# kompetansekartlegging
+# kompetansekartlegging - google sheets integrasjon
 
 Dette repoet inneholder kode og scripts for å gjennomføre Knowit Objectnets
 årlige kompetansekartlegging.
