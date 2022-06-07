@@ -1,0 +1,26 @@
+name: Push Budget Categories
+on:
+  push:
+    branches:
+      - master
+jobs:
+  push_to_google:
+    runs-on: ubuntu-latest
+    name: Push to Google
+    steps:
+      - uses: actions/checkout@v3
+      - name: Generate Config.ts
+        env:
+          BUDGET_CATEGORIES_CONFIG: ${{ secrets.BUDGET_CATEGORIES_CONFIG_TS }}
+        run: |
+          echo $BUDGET_CATEGORIES_CONFIG | base64 --decode > budget-categories/Config.ts
+      - uses: daikikatsuragawa/clasp-action@v1.1.0
+        with:
+          accessToken: ${{ secrets.BUDGET_CATEGORIES_ACCESS_TOKEN }}
+          idToken: ${{ secrets.BUDGET_CATEGORIES_ID_TOKEN }}
+          refreshToken: ${{ secrets.BUDGET_CATEGORIES_REFRESH_TOKEN }}
+          clientId: ${{ secrets.BUDGET_CATEGORIES_CLIENT_ID }}
+          clientSecret: ${{ secrets.BUDGET_CATEGORIES_CLIENT_SECRET }}
+          scriptId: ${{ secrets.BUDGET_CATEGORIES_SCRIPT_ID }}
+          rootDir: 'budget-categories'
+          command: 'push'
