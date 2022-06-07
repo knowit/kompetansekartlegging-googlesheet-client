@@ -14,3 +14,4 @@ kontakt med thomas.malt@knowit.no
 ## Kobling til api.kompetanse.knowit.no
 
 Kode for å hente data inn i google regneark ligger i mappen 2021.
+API-dokumentasjon for api.kompetanse.knowit.no finner du her: https://knowit.github.io/kompetansekartlegging-gui/#auth
