@@ -81,7 +81,7 @@ function generateDataSheet() {
       const seenJobs = new Set();
 
       let jobs: any[] = [];
-      u.answers.forEach((a) => {
+      u.answers.filter((a) => a.hasOwnProperty("question")).forEach((a) => {
         if (typeof a.customScaleValue !== 'undefined') {
           // workaround for a bug in backend where some customScaleValues are
           // duplicates for some users

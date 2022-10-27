@@ -11,7 +11,8 @@ I framtiden kan det inneholde flere ting.
 Hvis du lurer på noe rundt kompetansekartleggingen eller hvordan ting virker ta
 kontakt med thomas.malt@knowit.no
 
-## Kobling til api.kompetanse.knowit.no
+## API dokumentasjon
 
-Kode for å hente data inn i google regneark ligger i mappen 2021.
-API-dokumentasjon for api.kompetanse.knowit.no finner du her: https://knowit.github.io/kompetansekartlegging-gui/#auth
+Du finner dokumentasjon av API'et til kompetansekartleggingen på:
+https://apidocs.kompetanse.knowit.no/
+>>>>>>> 23d2f8e (fixing stuff)
