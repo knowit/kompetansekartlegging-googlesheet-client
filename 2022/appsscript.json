@@ -1,0 +1,6 @@
+{
+  "timeZone": "Europe/Oslo",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8"
+}
