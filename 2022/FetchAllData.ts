@@ -23,11 +23,11 @@ function transpose(a: any[][]): any[][] {
   return a[0].map((_, i) => a.map((x) => x[i]));
 }
 
-function getUserBlacklist(): string[] {
-  const sBlacklist = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('user blacklist');
-  if (sBlacklist === null) throw new TypeError('Spreadsheet sheet user blacklist is null');
+function getUserBlocklist(): string[] {
+  const sBlocklist = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('user blocklist');
+  if (sBlocklist === null) throw new TypeError('Spreadsheet sheet user blocklist is null');
 
-  return sBlacklist.getDataRange().getValues().flat().slice(2);
+  return sBlocklist.getDataRange().getValues().flat().slice(2);
 }
 
 /**
@@ -72,7 +72,7 @@ function generateDataSheet() {
     });
 
   const questions = jobQuestions.concat(compQuestions, compQuestions);
-  const blacklist = getUserBlacklist();
+  const blocklist = getUserBlocklist();
   const all = getAllAnswersData()
     .map((u: UserAnswers) => {
       let r = [u.email, u.username, u.updatedAt.slice(0, 10)];
@@ -127,7 +127,7 @@ function generateDataSheet() {
       return r;
     })
     .sort((a, b) => (a[0] > b[0] ? 1 : -1)) // Sort by email
-    .filter((u) => !blacklist.includes(u[0])); // Remove blacklisted users
+    .filter((u) => !blocklist.includes(u[0])); // Remove users who have quit
 
   // figure out who has not answered
   const answered = all.map((u) => u[0]);
