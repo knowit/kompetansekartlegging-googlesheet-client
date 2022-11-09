@@ -1,4 +1,4 @@
-name: Push Budget Categories
+name: Push Kompetansekartlegging 
 on:
   push:
     branches:
@@ -6,7 +6,7 @@ on:
 jobs:
   push_to_google:
     runs-on: ubuntu-latest
-    name: Push to Google
+    name: Push 2021 to Google
     steps:
       - uses: actions/checkout@v3
       - name: Generate Config.ts
