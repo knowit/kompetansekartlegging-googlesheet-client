@@ -221,8 +221,13 @@ function getAllAnswersForUsername(username: string): any {
   return answers;
 }
 
+/**
+ * Fetches and returns the list of categories sorted according to index.
+ * 
+ */
 function getCategoriesData(): Category[] {
-  return _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/categories`);
+  const data = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/categories`);
+  return data.sort((a: Category, b: Category) => a.index - b.index);
 }
 
 function getAllAnswersData(): UserAnswers[] {
