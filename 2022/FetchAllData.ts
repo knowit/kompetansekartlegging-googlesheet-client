@@ -44,93 +44,116 @@ function generateDataSheet() {
   sNotAnswered.clearContents();
 
   const users = getUserList();
+
+  // get categories ordered by index (order in web app)
   const categories: Category[] = getCategoriesData();
 
-  let catMap = new Map();
+  // create a lookup map to match ID's with data
+  // let catMap = new Map();
+  // categories.forEach((e: Category) => {
+  //   catMap.set(e.id, e.text);
+  // });
 
-  categories.forEach((e: Category) => {
-    catMap.set(e.id, e.text);
-  });
-
+  // All questions
   const allQuestions = getQuestions();
+
+  // Questions directly releated to competency: knowledge + motivation
   const compQuestions = allQuestions
     .filter((a) => a[3] === 'knowledgeMotivation')
-    .sort((a, b) => a[0] - b[0])
+    .sort((a, b) => a[0] - b[0]) // sort by question index
     .map((e) => {
-      if (catMap.has(e[5])) {
-        e.push(catMap.get(e[5]));
+      const category = categories.find((c) => c.id === e[5]);
+      if (typeof category !== "undefined") {
+        e.push(category.text, category);
+        return [e[6], e[1], e[4], e[7]];
       }
-      return [e[6], e[1], e[4]];
-    });
+    })
+    .sort((a: any, b: any) => a[3].index - b[3].index); // sort by category index
 
+  // Questions related to job funcions: job rotation, softskills
   const jobQuestions = allQuestions
     .filter((a) => a[3] === 'customScaleLabels')
+    // sort by question id:
     .sort((a, b) => (a[4] > b[4] ? 1 : -1))
+    // map replace category_id with category name:
     .map((e) => {
-      if (catMap.has(e[5])) e.push(catMap.get(e[5]));
-      return [e[6], e[1], e[4]];
-    });
+      const category = categories.find((c) => c.id === e[5])
+      if (typeof category !== "undefined") {
+        e.push(category.text, category);
+      }
+      return [e[6], e[1], e[4], e[7]];
+    })
+    // sort by category name:
+    .sort((a, b) => a[0] > b[0] ? 1 : -1);
 
   const questions = jobQuestions.concat(compQuestions, compQuestions);
   const blocklist = getUserBlocklist();
-  const all = getAllAnswersData()
-    .map((u: UserAnswers) => {
-      let r = [u.email, u.username, u.updatedAt.slice(0, 10)];
+  const allUsersAnswers = getAllUserQuestionAnswers();
 
-      const answers = new Map();
-      const seenJobs = new Set();
+  const answerMatrix = allUsersAnswers.map((u: UserQuestionAnswers) => {
+    let r = [u.email, u.username, u.updatedAt.slice(0, 10)];
 
-      let jobs: any[] = [];
-      u.answers.filter((a) => a.hasOwnProperty("question")).forEach((a) => {
-        if (typeof a.customScaleValue !== 'undefined') {
-          // workaround for a bug in backend where some customScaleValues are
-          // duplicates for some users
-          if (!seenJobs.has(a.question.id)) {
-            jobs.push([a.question.id, a.customScaleValue]);
-            seenJobs.add(a.question.id);
-          }
-        } else {
-          answers.set(a.question.id, {
-            knowledge: a.knowledge,
-            motivation: a.motivation,
-          });
-        }
-      });
+    const answers = new Map();
+    const jobs = new Map();
 
-      jobs = jobs.sort((a, b) => (a[0] > b[0] ? 1 : -1)).map((a) => a[1]);
-      while (jobs.length < 2) {
-        jobs.push('');
+    u.answers.forEach((a) => {
+      if (typeof a.customScaleValue !== 'undefined') {
+        // maybe still a bug: workaround for a bug in backend where some customScaleValues are
+        // duplicates for some users
+        jobs.set(a.questionId, a);
+      } else {
+        answers.set(a.questionId, a);
       }
-      r.push(...jobs);
+    });
 
+    for (const q of jobQuestions) {
+      if (typeof q === "undefined") {
+        throw new TypeError("Q is undefined");
+      }
+      // add all the job questions
+      if (jobs.has(q[2])) {
+        const j = jobs.get(q[2]);
+        r.push(j.customScaleValue)
+      } else {
+        r.push("")
+      }
+    }
+
+    for (const q of compQuestions) {
       // Add all the knowledge values first
-      compQuestions.forEach((q) => {
-        const id = q[2];
-        if (answers.has(id)) {
-          const a = answers.get(id);
-          r.push(a.knowledge);
-        } else {
-          r.push('');
-        }
-      });
+      if (typeof q === "undefined") {
+        throw new TypeError("Q is undefined");
+      }
+      if (answers.has(q[2])) {
+        const a = answers.get(q[2]);
+        r.push(a.knowledge);
+      } else {
+        r.push('');
+      }
+    }
 
+    for (const q of compQuestions) {
       // Add all the motivation values
-      compQuestions.forEach((q) => {
-        const id = q[2];
-        if (answers.has(id)) {
-          const a = answers.get(id);
-          r.push(a.motivation);
-        } else {
-          r.push('');
-        }
-      });
-      return r;
-    })
+      if (typeof q === "undefined") {
+        throw new TypeError("Q is undefined");
+      }
+
+      const id = q[2];
+      if (answers.has(id)) {
+        const a = answers.get(id);
+        r.push(a.motivation);
+      } else {
+        r.push('');
+      }
+    }
+
+    return r;
+  })
     .sort((a, b) => (a[0] > b[0] ? 1 : -1)) // Sort by email
     .filter((u) => !blocklist.includes(u[0])); // Remove users who have quit
 
   // figure out who has not answered
-  const answered = all.map((u) => u[0]);
+  const answered = answerMatrix.map((u) => u[0]);
   const notAnswered = users.filter((u) => !answered.includes(u)).map((u) => [u]);
 
   // transpose questions to print horizontally
@@ -138,7 +161,7 @@ function generateDataSheet() {
 
   sData.getRange(4, 1, 1, 3).setValues([['email', 'user id', 'updated at']]);
   sData.getRange(2, 4, transposed.length, transposed[0].length).setValues(transposed);
-  sData.getRange(5, 1, all.length, all[0].length).setValues(all);
+  sData.getRange(5, 1, answerMatrix.length, answerMatrix[0].length).setValues(answerMatrix);
   sData.getRange(1, 6).setValue('Kompetanse');
   sData.getRange(1, 157).setValue('Motivasjon');
 
@@ -172,56 +195,6 @@ function getUserList(): any[] {
 type KnowledgeMotivation = 'knowledge' | 'motivation';
 
 /**
- * Fetches the latest answers for user by id.
- *
- * @param username string
- * @returns
- * @customfunction
- */
-function getAnswersForUsername(username: string, type: KnowledgeMotivation) {
-  const data = _fetch(`${config.urls.answers}/${username}/newest`);
-  const questions: Question[] = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/questions`);
-  const qlist = questions.map((q) => q.id).sort();
-
-  const answers = qlist.map((id) => {
-    const found = data.answers.find((a: Answer) => id === a.question.id);
-    if (!found) return '';
-    if (type === 'knowledge') {
-      return found.knowledge ? found.knowledge : '';
-    }
-    if (type === 'motivation') {
-      return found.motivation ? found.motivation : '';
-    }
-    return '';
-  });
-  const output = [data.updatedAt].concat(answers);
-
-  return output;
-}
-
-/**
- * Fetches all the answers for a user.
- *
- * @param username string
- * @returns array range of answers unordered
- * @customfunction
- */
-function getAllAnswersForUsername(username: string): any {
-  const data = _fetch(`${config.urls.answers}/${username}/newest`);
-
-  const answers = data.answers.map((a: Answer) => [
-    a.question.id,
-    a.updatedAt,
-    a.question.topic,
-    a.question.categoryID,
-    a.knowledge,
-    a.motivation,
-  ]);
-
-  return answers;
-}
-
-/**
  * Fetches and returns the list of categories sorted according to index.
  * 
  */
@@ -230,9 +203,46 @@ function getCategoriesData(): Category[] {
   return data.sort((a: Category, b: Category) => a.index - b.index);
 }
 
+/**
+ * Fetches answers for all users. 
+ * Returns list sorted by email
+ * 
+ * @returns UserAnswers[]
+ */
 function getAllAnswersData(): UserAnswers[] {
-  const data = _fetch(config.urls.answers);
+  const data = _fetch(config.urls.answers).sort((a: UserAnswers, b: UserAnswers) => a.email > b.email ? 1 : -1);
   return data;
+}
+
+function getAllUserQuestionAnswers(): UserQuestionAnswers[] {
+  const data = getAllAnswersData();
+
+  const res = data.map((u) => {
+    const answers: AnswerWithInlineQuestion[] = u.answers.filter((a) => a.hasOwnProperty("question")).map((a) => {
+      // console.log(u);
+      const b: AnswerWithInlineQuestion = {
+        updatedAt: a.updatedAt,
+        questionId: a.question.id,
+        category: a.question.category,
+        topic: a.question.topic,
+      }
+
+      if (typeof a.knowledge !== "undefined") b.knowledge = a.knowledge;
+      if (typeof a.motivation !== "undefined") b.motivation = a.knowledge;
+      if (typeof a.customScaleValue !== "undefined") b.customScaleValue = a.customScaleValue;
+
+      return b;
+    });
+    return {
+      username: u.username,
+      email: u.email,
+      formDefinitionID: u.formDefinitionID,
+      updatedAt: u.updatedAt,
+      answers
+    }
+  });
+
+  return res as UserQuestionAnswers[];
 }
 
 /**
@@ -259,10 +269,23 @@ function getQuestionsData(): Question[] {
  * @returns
  * @customfunction
  */
-function getQuestions(): any[] {
+function getQuestions(): any[][] {
   const data: Question[] = getQuestionsData();
   const output = data
     .map((q) => [q.index, q.topic, q.text, q.type, q.id, q.categoryID])
     .sort((a, b) => (a[5] > b[5] ? 1 : -1));
   return output;
+}
+
+/**
+ * Fetches the questions, merges them with categories and returns as a nested array for use in a spreadsheet
+ * 
+ * @returns Array<any, any>
+ * @customfunction 
+ */
+function getQuestionsWithCategory() {
+  const questions: Question[] = getQuestionsData();
+  const categories: Category[] = getCategoriesData();
+
+  return questions;
 }

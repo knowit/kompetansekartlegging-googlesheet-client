@@ -10,12 +10,28 @@ interface Question {
   id: string; // id: 'b1656d08-1f76-443e-a23f-b6179235da75' } },
 }
 
-interface Answer {
+interface AnswerQuestion {
+  id: string; // id: 'b1656d08-1f76-443e-a23f-b6179235da75' } },
+  topic: string; // topic: 'Relasjonsdatabaser',
+  category: string; // category: 'Design',
+}
+
+interface AnswerWithNestedQuestion {
   knowledge?: number; // knowledge: 3,
   motivation?: number; //     motivation: 2,
   customScaleValue?: number;
-  updatedAt: string; //     updatedAt: '2021-02-22T12:15:51.688Z',
-  question: Question; //     question:
+  updatedAt?: string; //     updatedAt: '2021-02-22T12:15:51.688Z',
+  question: AnswerQuestion; //     question:
+}
+
+interface AnswerWithInlineQuestion {
+  knowledge?: number; // knowledge: 3,
+  motivation?: number; //     motivation: 2,
+  customScaleValue?: number;
+  updatedAt?: string; //     updatedAt: '2021-02-22T12:15:51.688Z',
+  category: string; // category: 'Design',
+  topic: string; // topic: 'Relasjonsdatabaser',
+  questionId: string; // id: 'b1656d08-1f76-443e-a23f-b6179235da75' } },
 }
 
 interface TaxonomyTree {
@@ -34,7 +50,15 @@ interface UserAnswers {
   email: string;
   formDefinitionID: string;
   updatedAt: string;
-  answers: Answer[];
+  answers: AnswerWithNestedQuestion[];
+}
+
+interface UserQuestionAnswers {
+  username: string;
+  email: string;
+  formDefinitionID: string;
+  updatedAt: string;
+  answers: AnswerWithInlineQuestion[];
 }
 
 interface UserAttribute {
