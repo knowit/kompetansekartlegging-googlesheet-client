@@ -200,7 +200,7 @@ type KnowledgeMotivation = 'knowledge' | 'motivation';
  */
 function getCategoriesData(): Category[] {
   const data = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/categories`);
-  return data.sort((a: Category, b: Category) => (a.index === b.index) ? (a.text > b.text) : (a.index - b.index));
+  return data.sort((a: Category, b: Category) => (a.index === b.index) ? (a.text < b.text) : (a.index - b.index));
 }
 
 /**
