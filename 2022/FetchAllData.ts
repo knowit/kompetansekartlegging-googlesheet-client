@@ -68,7 +68,7 @@ function generateDataSheet() {
         return [e[6], e[1], e[4], e[7]];
       }
     })
-    .sort((a: any, b: any) => a[3].index - b[3].index); // sort by category index
+    .sort((a: any, b: any) => a[3].index - b[3].index); // sort by category index. FIX THIS.
 
   // Questions related to job funcions: job rotation, softskills
   const jobQuestions = allQuestions
@@ -200,14 +200,7 @@ type KnowledgeMotivation = 'knowledge' | 'motivation';
  */
 function getCategoriesData(): Category[] {
   const data = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/categories`);
-  return data.sort((a: Category, b: Category) => {
-    if (a.index === b.index) {
-      return (a.text > b.text) ? 1 : -1;
-    }
-    else {
-      return a.index - b.index
-    }
-  });
+  return data.sort((a: Category, b: Category) => (a.index === b.index) ? (a.text > b.text) : (a.index - b.index));
 }
 
 /**
