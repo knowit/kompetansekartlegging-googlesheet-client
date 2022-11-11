@@ -200,7 +200,14 @@ type KnowledgeMotivation = 'knowledge' | 'motivation';
  */
 function getCategoriesData(): Category[] {
   const data = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/categories`);
-  return data.sort((a: Category, b: Category) => a.index - b.index);
+  return data.sort((a: Category, b: Category) => {
+    if (a.index === b.index) {
+      return (a.text > b.text) ? 1 : -1;
+    }
+    else {
+      return a.index - b.index
+    }
+  });
 }
 
 /**
@@ -253,8 +260,7 @@ function getAllUserQuestionAnswers(): UserQuestionAnswers[] {
  */
 function getCategories() {
   const output = getCategoriesData()
-    .map((c) => [c.index, c.text, c.id, c.description])
-    .sort((a, b) => (a[0] > b[0] ? 1 : -1));
+    .map((c) => [c.index, c.text, c.id, c.description]);
 
   return output;
 }
@@ -293,7 +299,7 @@ function getQuestionsWithCategory() {
     const r = [q.index, q.topic, q.text, q.type, q.id, cat?.id, cat?.index, cat?.text, cat?.description];
 
     return r;
-  }).sort((a: any, b: any) => (a[0] - b[0]));
+  });
 
   return res;
 }
