@@ -36,23 +36,16 @@ function getUserBlocklist(): string[] {
 function generateDataSheet() {
   const sData = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('data');
   if (sData === null) throw new TypeError('Spreadsheet sheet data is null');
+  sData.clearContents();
 
   const sNotAnswered = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('not answered');
   if (sNotAnswered === null) throw new TypeError('Spreadsheet sheet not answered is null');
-
-  sData.clearContents();
   sNotAnswered.clearContents();
 
   const users = getUserList();
 
   // get categories ordered by index (order in web app)
   const categories: Category[] = getCategoriesData();
-
-  // create a lookup map to match ID's with data
-  // let catMap = new Map();
-  // categories.forEach((e: Category) => {
-  //   catMap.set(e.id, e.text);
-  // });
 
   // All questions
   const allQuestions = getQuestions();
@@ -68,7 +61,7 @@ function generateDataSheet() {
         return [e[6], e[1], e[4], e[7]];
       }
     })
-    .sort((a: any, b: any) => a[3].index - b[3].index); // sort by category index. FIX THIS.
+    .sort((a: any, b: any) => a[3].index - b[3].index); // sort by category index.
 
   // Questions related to job funcions: job rotation, softskills
   const jobQuestions = allQuestions
@@ -199,8 +192,17 @@ type KnowledgeMotivation = 'knowledge' | 'motivation';
  * 
  */
 function getCategoriesData(): Category[] {
-  const data = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/categories`);
-  return data.sort((a: Category, b: Category) => (a.index === b.index) ? (a.text < b.text) : (a.index - b.index));
+  const data: Category[] = _fetch(`${config.urls.catalogs}/${config.catalogs.latest}/categories`);
+
+  // workaround while bug with equal index exist. WILL BREAK THINGS LATER
+  const processed = data.map((i: Category) => {
+    if (i.text === 'Cybersikkerhet' && i.index === 11) {
+      i.index = 10;
+    }
+    return i;
+  });
+
+  return processed.sort((a: Category, b: Category) => (a.index - b.index));
 }
 
 /**
