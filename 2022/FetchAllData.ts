@@ -298,3 +298,24 @@ function getQuestionsWithCategory() {
 
   return res;
 }
+
+/**
+ * Fetches all competency questions, merges them with categories and returns as a nested array for use in a spreadsheet
+ * 
+ * @returns Array<any, any>
+ * @customfunction 
+ */
+function getCompetencyQuestionsWithCategory() {
+  const questions: Question[] = getQuestionsData();
+  const categories: Category[] = getCategoriesData();
+
+  const res = questions.filter((a) => a.type === "knowledgeMotivation").map((q) => {
+    const cat = categories.find((c) => c.id === q.categoryID);
+
+    const r = [q.index, q.topic, q.text, q.type, q.id, cat?.id, cat?.index, cat?.text, cat?.description];
+
+    return r;
+  });
+
+  return res;
+}
