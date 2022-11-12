@@ -216,6 +216,10 @@ function getAllAnswersData(): UserAnswers[] {
   return data;
 }
 
+/**
+ * Fetches all anwers for all users and transforms into a managable format.
+ * @returns UserQuestionAnswers[]
+ */
 function getAllUserQuestionAnswers(): UserQuestionAnswers[] {
   const data = getAllAnswersData();
 
@@ -230,7 +234,7 @@ function getAllUserQuestionAnswers(): UserQuestionAnswers[] {
       }
 
       if (typeof a.knowledge !== "undefined") b.knowledge = a.knowledge;
-      if (typeof a.motivation !== "undefined") b.motivation = a.knowledge;
+      if (typeof a.motivation !== "undefined") b.motivation = a.motivation;
       if (typeof a.customScaleValue !== "undefined") b.customScaleValue = a.customScaleValue;
 
       return b;
