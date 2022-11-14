@@ -147,7 +147,7 @@ function generateDataSheet() {
 
   // figure out who has not answered
   const answered = answerMatrix.map((u) => u[0]);
-  const notAnswered = users.filter((u) => !answered.includes(u)).map((u) => [u]);
+  const notAnswered = users.filter((u) => !answered.includes(u)).map((u) => [u]).filter((u) => !blocklist.includes(u[0]));
 
   // transpose questions to print horizontally
   const transposed = transpose(questions);

@@ -6,10 +6,9 @@
  */
 function calcTShape(data: any[][]) {
   const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('T-shape');
-
   if (sh === null) throw new TypeError('Sheet T-shape was null');
 
-  const ra = sh.getRange(2, 4, 1, 9);
+  const ra = sh.getRange(2, 4, 1, 13);
   const categories = ra.getValues().flat();
 
   console.log('categories', categories);
@@ -24,5 +23,14 @@ function calcTShape(data: any[][]) {
   });
 
   console.log('output', output);
+  return output;
+}
+
+function debugCalcTShape() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('T-shape');
+  if (sh === null) throw new TypeError('Sheet T-shape was null');
+
+  const range = sh.getRange(4, 4, 153, 13).getValues();
+  const output = calcTShape(range);
   return output;
 }
